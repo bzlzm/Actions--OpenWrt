@@ -18,3 +18,6 @@
 
 # Modify hostname
 #sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+
+# 强制 OpenWrt 编译时借用宿主机（GitHub）已有的 node 和 python3，不进行本地二次编译
+sed -i 's/Build\/Compile/Build\/Compile\n\t@echo "Skipping NodeJS compile..."/' feeds/packages/lang/node/Makefile 2>/dev/null || true
