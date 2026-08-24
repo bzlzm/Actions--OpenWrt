@@ -49,6 +49,18 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
+
+    - name: Cache Build Objects
+      uses: actions/cache@v4
+      with:
+        path: |
+          openwrt/dl
+          openwrt/staging_dir
+          openwrt/toolchain
+        # 核心优化：将固定的 24.10 改为动态读取分支变量 env.REPO_BRANCH
+        key: ${{ runs-on }}-openwrt-${{ env.REPO_BRANCH }}-${{ hashFiles('openwrt/.config') }}
+        restore-keys: |
+          ${{ runs-on }}-openwrt-${{ env.REPO_BRANCH }}-
         
     - name: Setup Node.js Environment
       uses: actions/setup-node@v4
