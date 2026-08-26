@@ -1,15 +1,3 @@
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-#
-# File: .github/workflows/openwrt-bulder.yml
-# Description: Build OpenWrt using GitHub Actions
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-
 name: OpenWrt Builder
 
 on:
@@ -57,11 +45,11 @@ jobs:
           openwrt/dl
           openwrt/staging_dir
           openwrt/toolchain
-        # 核心优化：将固定的 24.10 改为动态读取分支变量 env.REPO_BRANCH
-        key: ${{ runs-on }}-openwrt-${{ env.REPO_BRANCH }}-${{ hashFiles('openwrt/.config') }}
+        # 核心优化：全自动动态读取系统名称与分支变量
+        key: ${{ runner.os }}-openwrt-${{ env.REPO_BRANCH }}-${{ hashFiles('openwrt/.config') }}
         restore-keys: |
-          ${{ runs-on }}-openwrt-${{ env.REPO_BRANCH }}-
-        
+          ${{ runner.os }}-openwrt-${{ env.REPO_BRANCH }}-
+
     - name: Setup Node.js Environment
       uses: actions/setup-node@v4
       with:
@@ -152,8 +140,7 @@ jobs:
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        [ ${UPLOAD_GOFILE} = true && ${{ steps.gofile.outputs.url }} ] && echo "🔗 [GoFile](${{ steps.gofile.outputs.url }})" >> release.txt
+        echo "OpenWrt 固件云编译完成" > release.txt
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
