@@ -125,6 +125,11 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
+        # 检查 targets 目录是否存在
+        if [ ! -d "openwrt/bin/targets" ]; then
+          echo "❌ 严重错误: openwrt/bin/targets 目录不存在，说明前一步编译已经彻底失败！"
+          exit 1
+        fi
         cd openwrt/bin/targets/*/*
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
