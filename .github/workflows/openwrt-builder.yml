@@ -38,6 +38,20 @@ jobs:
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
 
+    - name: Clone source code
+      # 删除了 working-directory: /workdir，直接在当前默认工作区操作
+      run: |
+        df -hT $PWD
+        # 克隆源码到当前目录下的 openwrt 文件夹中
+        git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+        
+        # 严格验证核心文件是否存在，若不存在则中断，不盲目往下跑
+        if [ ! -f "openwrt/scripts/feeds" ]; then
+          echo "❌ 严重错误: 源码克隆不完整或失败，未找到 scripts/feeds 脚本！"
+          ls -la openwrt/
+          exit 1
+        fi
+
     - name: Cache Build Objects
       uses: actions/cache@v4
       with:
@@ -59,20 +73,6 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-
-    - name: Clone source code
-      # 删除了 working-directory: /workdir，直接在当前默认工作区操作
-      run: |
-        df -hT $PWD
-        # 克隆源码到当前目录下的 openwrt 文件夹中
-        git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
-        
-        # 严格验证核心文件是否存在，若不存在则中断，不盲目往下跑
-        if [ ! -f "openwrt/scripts/feeds" ]; then
-          echo "❌ 严重错误: 源码克隆不完整或失败，未找到 scripts/feeds 脚本！"
-          ls -la openwrt/
-          exit 1
-        fi
 
     - name: Load custom feeds
       run: |
