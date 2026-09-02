@@ -61,11 +61,18 @@ jobs:
         python-version: '3.11'
 
     - name: Clone source code
-      working-directory: /workdir
+      # 删除了 working-directory: /workdir，直接在当前默认工作区操作
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        # 克隆源码到当前目录下的 openwrt 文件夹中
+        git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
+        
+        # 严格验证核心文件是否存在，若不存在则中断，不盲目往下跑
+        if [ ! -f "openwrt/scripts/feeds" ]; then
+          echo "❌ 严重错误: 源码克隆不完整或失败，未找到 scripts/feeds 脚本！"
+          ls -la openwrt/
+          exit 1
+        fi
 
     - name: Load custom feeds
       run: |
