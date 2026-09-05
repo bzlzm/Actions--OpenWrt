@@ -31,7 +31,6 @@ jobs:
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/share/swift
         sudo apt-get update
         sudo apt-get -y install build-essential alpine-pico antiword asciidoc bash bc binutils binfmt-support bison bzip2 fastjar flex gawk gcc-multilib g++-multilib gettext git git-core gperf gzip intltool lib32gcc-s1 libc6-dev-i386 libelf-dev libglib2.0-dev libncurses5-dev libncursesw5-dev libssl-dev libtool lrzsz mkisofs msmtp nano p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply python3-pyelftools qemu-utils rsync scons jshon subversion swig texinfo u-boot-tools unzip upx micro nodejs npm zlib1g-dev
-        sudo apt-get -y install build-essential alpine-pico antiword asciidoc bash bc binutils binfmt-support bison bzip2 fastjar flex gawk gcc-multilib g++-multilib gettext git git-core gperf gzip intltool lib32gcc-s1 libc6-dev-i386 libelf-dev libglib2.0-dev libncurses5-dev libncursesw5-dev libssl-dev libtool lrzsz mkisofs msmtp nano p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply python3-pyelftools qemu-utils rsync scons jshon subversion swig texinfo u-boot-tools uname26 unzip upx micro nodejs npm zlib1g-dev
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
