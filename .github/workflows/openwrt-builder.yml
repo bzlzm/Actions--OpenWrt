@@ -28,8 +28,6 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
-        # 核心修复：Ubuntu 24.04 下绝对不能清理 sources.list.d/
-        # 清理自带的残留大文件，释放磁盘空间
         sudo docker image prune --all --force
         
         # 刷新并安装依赖
