@@ -4,6 +4,10 @@ on:
   repository_dispatch:
   workflow_dispatch:
 
+permissions:
+  contents: write
+  actions: write
+
 env:
   REPO_URL: https://github.com/bzlzm/openwrt
   REPO_BRANCH: openwrt-25.12
@@ -41,44 +45,21 @@ jobs:
         sudo -E apt-get -qq autoremove --purge
         sudo -E apt-get -qq clean
         sudo timedatectl set-timezone "$TZ"
-        sudo mkdir -p /workdir
-        sudo chown $USER:$GROUPS /workdir
 
     - name: Clone source code
-      # 删除了 working-directory: /workdir，直接在当前默认工作区操作
       run: |
         df -hT $PWD
-        # 克隆源码到当前目录下的 openwrt 文件夹中
         git clone --depth=1 $REPO_URL -b $REPO_BRANCH openwrt
-        
-        # 严格验证核心文件是否存在，若不存在则中断，不盲目往下跑
         if [ ! -f "openwrt/scripts/feeds" ]; then
           echo "❌ 严重错误: 源码克隆不完整或失败，未找到 scripts/feeds 脚本！"
           ls -la openwrt/
           exit 1
         fi
 
-    - name: Cache Build Objects
-      uses: actions/cache@v4
-      with:
-        path: |
-          openwrt/dl
-          openwrt/staging_dir
-          openwrt/toolchain
-        # 核心优化：全自动动态读取系统名称与分支变量
-        key: ${{ runner.os }}-openwrt-${{ env.REPO_BRANCH }}-${{ hashFiles('openwrt/.config') }}
-        restore-keys: |
-          ${{ runner.os }}-openwrt-${{ env.REPO_BRANCH }}-
-
     - name: Setup Node.js Environment
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-
-    - name: Setup Python Environment
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
 
     - name: Load custom feeds
       run: |
@@ -101,11 +82,21 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    - name: Cache Build Objects
+      uses: actions/cache@v4
+      with:
+        path: openwrt/dl
+        key: ${{ runner.os }}-openwrt-dl-v3-${{ env.REPO_BRANCH }}-${{ hashFiles('openwrt/.config') }}
+        restore-keys: |
+          ${{ runner.os }}-openwrt-dl-v3-${{ env.REPO_BRANCH }}-
+
     - name: Download package
       id: package
       run: |
         cd openwrt
         make defconfig
+        # 清理可能残缺的 AdGuardHome 及 Go 模块缓存，防止离线编译缺失子包
+        rm -rf dl/AdGuardHome* dl/go-mod-cache
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
@@ -115,7 +106,6 @@ jobs:
       run: |
         cd openwrt
         echo -e "$(nproc) thread compile"
-        # 修复漏洞：如果编译失败，直接退出并返回错误码，不再执行后续 echo
         make -j$(nproc) || make -j1 || make -j1 V=s || exit 1
         
         echo "status=success" >> $GITHUB_OUTPUT
@@ -138,7 +128,6 @@ jobs:
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
-        # 检查 targets 目录是否存在
         if [ ! -d "openwrt/bin/targets" ]; then
           echo "❌ 严重错误: openwrt/bin/targets 目录不存在，说明前一步编译已经彻底失败！"
           exit 1
